@@ -8,7 +8,6 @@ using namespace std;
 
 #define tunIPPrefix "192.168.2."
 #define tunIPSeg "192.168.2.0/24"
-#define PORT 16666
 #define BUFFER_SIZE 2048
 #define EPOLLEVENTS 1000
 
@@ -30,10 +29,15 @@ struct ClientPro
 map<Tins::IPv4Address, ClientPro> ipMap;
 map<ClientPro, Tins::IPv4Address> clientMap;
 int clientNum = 1;
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc < 2)
+    {
+        cout << "Usage: ./vpnServer port" << endl;
+    }
+    int port = atoi(argv[1]);
     MyTun myTun;
-    UdpServer udpServer(PORT);
+    UdpServer udpServer(port);
     string tunName = myTun.name;
 
     string cmd = "ifconfig " + tunName + " " + tunIPSeg + " up";
@@ -89,13 +93,13 @@ void udpHandle(MyTun &myTun, UdpServer &udpServer)
         }
         catch (...)
         {
-            return ;
+            return;
         }
         ClientPro clientPro;
         clientPro.clientIP = sendIp.src_addr();
         clientPro.clientaddr = udpServer.clientaddr;
 
-        if(clientMap.count(clientPro) == 0)
+        if (clientMap.count(clientPro) == 0)
         {
             string tunIP = tunIPPrefix + to_string(clientNum);
             Tins::IPv4Address lo(tunIP);
@@ -137,7 +141,7 @@ void tunHandle(MyTun &myTun, UdpServer &udpServer)
     }
     catch (...)
     {
-        return ;
+        return;
     }
 
     Tins::IPv4Address sendClientIP = ipMap[recvIp.dst_addr()].clientIP;

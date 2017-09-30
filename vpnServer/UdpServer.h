@@ -9,8 +9,11 @@ class UdpServer
 {
 public:
     UdpServer(int port);
+
     int udpRecv(uint8_t recvbuffer[]);
+
     void udpSend(uint8_t sendbuffer[], int &sendsize, sockaddr_in sendClientaddr);
+
     void udpClose();
 
     int server_sockfd;

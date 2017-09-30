@@ -13,7 +13,9 @@ class MyTun
 {
 public:
     MyTun();
+
     int tunRead(uint8_t readbuf[], int readSize);
+
     void tunWrite(uint8_t writebuf[], int writeSize);
 
     char name[10];

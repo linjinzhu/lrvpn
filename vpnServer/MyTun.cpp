@@ -20,7 +20,7 @@ MyTun::MyTun()
         exit(errno);
     }
     printf("ifname is %s\n", ifr.ifr_name);
-    sprintf(name,"%s",ifr.ifr_name);
+    sprintf(name, "%s", ifr.ifr_name);
 }
 
 int MyTun::tunRead(uint8_t readbuf[], int readSize)
