@@ -27,10 +27,10 @@ int UdpServer::udpRecv(uint8_t *recvbuffer)
     return ret;
 }
 
-void UdpServer::udpSend(uint8_t *sendbuffer, int &sendsize)
+void UdpServer::udpSend(uint8_t *sendbuffer, int &sendsize, sockaddr_in sendClientaddr)
 {
     int ret;
-    ret = sendto(server_sockfd,sendbuffer,sendsize,0,(struct sockaddr *)&clientaddr,len);
+    ret = sendto(server_sockfd,sendbuffer,sendsize,0,(struct sockaddr *)&sendClientaddr,sizeof(sendClientaddr));
     if (ret == -1)
     {
         perror("sendto");

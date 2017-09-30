@@ -6,7 +6,7 @@
 
 using namespace std;
 
-#define tunIP "192.168.2.10"
+#define tunIPPrefix "192.168.2."
 #define tunIPSeg "192.168.2.0/24"
 #define PORT 16666
 #define BUFFER_SIZE 2048
@@ -17,8 +17,19 @@ void udpHandle(MyTun &myTun, UdpServer &udpServer);
 void tunHandle(MyTun &myTun, UdpServer &udpServer);
 void add_event(int epollfd,int fd,int state);
 
-Tins::IPv4Address clientIP;
+struct ClientPro
+{
+    Tins::IPv4Address clientIP;
+    sockaddr_in clientaddr;
+    bool operator < (const ClientPro &rhs) const
+    {
+        return clientIP < rhs.clientIP;
+    }
+};
 
+map<Tins::IPv4Address, ClientPro> ipMap;
+map<ClientPro, Tins::IPv4Address> clientMap;
+int clientNum = 1;
 int main()
 {
     MyTun myTun;
@@ -70,6 +81,7 @@ void udpHandle(MyTun &myTun, UdpServer &udpServer)
     recvNum = udpServer.udpRecv(buffer);
     if (recvNum > 0)
     {
+
         Tins::IP sendIp;
         try
         {
@@ -79,9 +91,26 @@ void udpHandle(MyTun &myTun, UdpServer &udpServer)
         {
             return ;
         }
-        Tins::IPv4Address lo(tunIP);
-        clientIP = sendIp.src_addr();
-        sendIp.src_addr(lo);
+        ClientPro clientPro;
+        clientPro.clientIP = sendIp.src_addr();
+        clientPro.clientaddr = udpServer.clientaddr;
+
+        if(clientMap.count(clientPro) == 0)
+        {
+            string tunIP = tunIPPrefix + to_string(clientNum);
+            Tins::IPv4Address lo(tunIP);
+            sendIp.src_addr(lo);
+
+            clientMap[clientPro] = lo;
+            ipMap[lo] = clientPro;
+            clientNum++;
+            if (clientNum == 254)
+                clientNum = 1;
+        }
+        else
+        {
+            sendIp.src_addr(clientMap[clientPro]);
+        }
 
         vector<uint8_t> writeIP = sendIp.serialize();
         int writeNum = writeIP.size();
@@ -110,7 +139,10 @@ void tunHandle(MyTun &myTun, UdpServer &udpServer)
     {
         return ;
     }
-    recvIp.dst_addr(clientIP);
+
+    Tins::IPv4Address sendClientIP = ipMap[recvIp.dst_addr()].clientIP;
+    sockaddr_in sendClientaddr = ipMap[recvIp.dst_addr()].clientaddr;
+    recvIp.dst_addr(sendClientIP);
 
     vector<uint8_t> recvIP = recvIp.serialize();
     int recvNum = recvIP.size();
@@ -120,7 +152,7 @@ void tunHandle(MyTun &myTun, UdpServer &udpServer)
         recvBuf[i] = recvIP[i];
     }
 
-    udpServer.udpSend(recvBuf, recvNum);
+    udpServer.udpSend(recvBuf, recvNum, sendClientaddr);
 }
 
 void add_event(int epollfd,int fd,int state)
