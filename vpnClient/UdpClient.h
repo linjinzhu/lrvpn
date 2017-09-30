@@ -10,8 +10,11 @@ class UdpClient
 {
 public:
     UdpClient(const char ip[], int port);
+
     void udpSend(uint8_t sendbuffer[], int &sendsize);
+
     int udpRecv(uint8_t recvbuffer[]);
+
     void udpClose();
 
     int clientfd;
