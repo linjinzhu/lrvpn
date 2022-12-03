@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     if (argc < 2)
     {
         cout << "Usage: ./vpnServer port" << endl;
+        return 0; 
     }
     int port = atoi(argv[1]);
     MyTun myTun;
